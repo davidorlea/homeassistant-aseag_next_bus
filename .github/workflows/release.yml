@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - custom_components/aseag_next_bus/manifest.json
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  COMPONENT_DIR: custom_components/aseag_next_bus
+  COMPONENT_NAME: aseag_next_bus
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Retrieve manifest information
+        id: manifest
+        run: |
+          version=$(jq -r '.version' ./${{ env.COMPONENT_DIR }}/manifest.json)
+          echo "version=$version" >> $GITHUB_OUTPUT
+      - name: Check for Git tag
+        id: git-tag
+        run: |
+          TAG="v${{ steps.manifest.outputs.version }}"
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Create Git tag
+        if: steps.git-tag.outputs.exists != 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              const result = await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: 'refs/tags/v${{ steps.manifest.outputs.version }}',
+                sha: context.sha
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
+      - name: Draft GitHub release
+        id: draft-release
+        if: steps.git-tag.outputs.exists != 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              const result = await github.rest.repos.createRelease({
+                owner,
+                repo,
+                tag_name: 'v${{ steps.manifest.outputs.version }}',
+                name: 'v${{ steps.manifest.outputs.version }}',
+                draft: true,
+                generate_release_notes: true,
+              });
+              core.setOutput('release_id', result.data.id);
+            } catch (error) {
+              core.setFailed(error.message);
+            }
+      - name: Create zip file
+        if: steps.git-tag.outputs.exists != 'true'
+        run: |
+          cd ./${{ env.COMPONENT_DIR }}
+          zip ${{ env.COMPONENT_NAME }}.zip -r ./
+      - name: Upload release asset
+        if: steps.git-tag.outputs.exists != 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs').promises;
+            const { owner, repo } = context.repo;
+            try {
+              const result = await github.rest.repos.uploadReleaseAsset({
+                owner,
+                repo,
+                release_id: '${{ steps.draft-release.outputs.release_id }}',
+                name: '${{ env.COMPONENT_NAME }}.zip',
+                data: await fs.readFile('./${{ env.COMPONENT_DIR }}/${{ env.COMPONENT_NAME }}.zip')
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
