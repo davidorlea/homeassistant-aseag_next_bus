@@ -5,8 +5,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorDeviceClass
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -98,7 +98,7 @@ class AseagNextBusSensor(Entity):
     def device_class(self):
         """Return the device class of the ASEAG Next Bus Sensor."""
         if self._mode == "single":
-            return DEVICE_CLASS_TIMESTAMP
+            return SensorDeviceClass.TIMESTAMP
 
     @property
     def icon(self):
