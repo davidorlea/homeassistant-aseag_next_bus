@@ -1,0 +1,23 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Run pytest
+        uses: davidorlea/actions/homeassistant/pytest@add-hass-pytest-workflow
+        with:
+          python-version: '3.12'
+          python-requirements: 'requests_mock'
