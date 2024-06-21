@@ -19,4 +19,4 @@ jobs:
       - name: Run pre-commit
         uses: davidorlea/actions/homeassistant/pre-commit@master
         with:
-          python-version: '3.11'
+          python-version: '3.12'
