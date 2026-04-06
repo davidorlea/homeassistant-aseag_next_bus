@@ -7,6 +7,9 @@ on:
     paths:
       - custom_components/aseag_next_bus/manifest.json
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
