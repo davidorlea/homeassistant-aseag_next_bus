@@ -24,5 +24,5 @@ jobs:
       - name: Run pytest
         uses: davidorlea/actions/homeassistant/pytest@master
         with:
-          python-version: '3.12'
+          python-version: '3.14'
           python-requirements: 'requests_mock homeassistant'
