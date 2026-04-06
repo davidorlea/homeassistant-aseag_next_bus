@@ -19,4 +19,4 @@ jobs:
         with:
           submodules: recursive
       - name: Validate against Hassfest
-        uses: home-assistant/actions/hassfest@26d56ed1a1cbfeabf59feb7b26e368e13f47ef52
+        uses: home-assistant/actions/hassfest@5752577ea7cc5aefb064b0b21432f18fe4d6ba90
