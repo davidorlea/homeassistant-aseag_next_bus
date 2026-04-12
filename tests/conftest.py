@@ -46,6 +46,16 @@ class AseagPredictionFixture:
         self._track = track
         return self
 
+    def without_planed_time(self) -> Self:
+        """Omit the planned time."""
+        self._planned_time = None
+        return self
+
+    def without_actual_time(self) -> Self:
+        """Omit the actual time."""
+        self._actual_time = None
+        return self
+
     def build(self) -> dict:
         """Return the prediction."""
         return {
@@ -121,6 +131,19 @@ def create_api_response():
 
     def _create_api_response(predictions: [dict]):
         departures = AseagDeparturesFixture().with_departures(predictions).build()
-        return json.dumps(departures)
+        return json.dumps(del_none(departures.copy()))
 
     return _create_api_response
+
+
+def del_none(d):
+    """Remove None values from the object."""
+    for key, value in list(d.items()):
+        if value is None:
+            del d[key]
+        elif isinstance(value, dict):
+            del_none(value)
+        elif isinstance(value, list):
+            for v in value:
+                del_none(v)
+    return d

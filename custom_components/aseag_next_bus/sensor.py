@@ -179,13 +179,13 @@ class AseagNextBusSensor(Entity):
     @staticmethod
     def __get_prediction_time(prediction):
         """Return prediction time derived from planned and actual time."""
-        if prediction["plannedTime"]:
-            return utc_from_timestamp(
-                int((prediction["actualTime"] or prediction["plannedTime"]) / 1000)
-            )
+        if "actualTime" in prediction:
+            return utc_from_timestamp(int(prediction["actualTime"] / 1000))
+        if "plannedTime" in prediction:
+            return utc_from_timestamp(int(prediction["plannedTime"] / 1000))
 
     @staticmethod
     def __get_prediction_delay(prediction):
         """Return prediction delay derived from planned and actual time."""
-        if prediction["actualTime"] and prediction["plannedTime"]:
+        if "actualTime" in prediction and "plannedTime" in prediction:
             return int((prediction["actualTime"] - prediction["plannedTime"]) / 1000)
