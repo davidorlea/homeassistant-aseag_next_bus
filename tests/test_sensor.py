@@ -1,11 +1,200 @@
 """Tests for ASEAG Next Bus Sensor."""
 
 from datetime import datetime, timedelta, timezone
+import json
 
+import pytest
+import requests
 import requests_mock
 
 from custom_components.aseag_next_bus.sensor import AseagApi, AseagNextBusSensor
 from homeassistant.components.sensor import SensorDeviceClass
+
+
+@pytest.mark.parametrize(
+    "api_response",
+    [
+        None,
+        "",
+        {},
+        {"departures": None},
+        {"departures": {}},
+        {"departures": {"departures": None}},
+        {"departures": {"departures": []}},
+    ],
+)
+def test_sensor_in_single_mode_with_empty_response(
+    api_response, requests_mock: requests_mock.Mocker
+):
+    """Test that sensor in single mode with empty response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=json.dumps(api_response),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("delay") is None
+    assert sensor.extra_state_attributes.get("line") is None
+    assert sensor.extra_state_attributes.get("destination") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+@pytest.mark.parametrize(
+    "api_response",
+    [
+        None,
+        "",
+        {},
+        {"departures": None},
+        {"departures": {}},
+        {"departures": {"departures": None}},
+        {"departures": {"departures": []}},
+    ],
+)
+def test_sensor_in_multi_mode_with_empty_response(
+    api_response, requests_mock: requests_mock.Mocker
+):
+    """Test that sensor in multi mode with empty response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=json.dumps(api_response),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("predictions") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_single_mode_with_malformed_response(
+    requests_mock: requests_mock.Mocker,
+):
+    """Test that sensor in single mode with malformed response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text="some text",
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("delay") is None
+    assert sensor.extra_state_attributes.get("line") is None
+    assert sensor.extra_state_attributes.get("destination") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_multi_mode_with_malformed_response(
+    requests_mock: requests_mock.Mocker,
+):
+    """Test that sensor in multi mode with malformed response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text="some text",
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("predictions") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_single_mode_with_error_response(requests_mock: requests_mock.Mocker):
+    """Test that sensor in single mode with error response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        status_code=500,
+        text="some error",
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("delay") is None
+    assert sensor.extra_state_attributes.get("line") is None
+    assert sensor.extra_state_attributes.get("destination") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_multi_mode_with_error_response(requests_mock: requests_mock.Mocker):
+    """Test that sensor in multi mode with error response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        status_code=500,
+        text="some error",
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("predictions") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_single_mode_with_no_response(requests_mock: requests_mock.Mocker):
+    """Test that sensor in single mode with no response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        exc=requests.exceptions.ConnectionError,
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("delay") is None
+    assert sensor.extra_state_attributes.get("line") is None
+    assert sensor.extra_state_attributes.get("destination") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
+
+
+def test_sensor_in_multi_mode_with_no_response(requests_mock: requests_mock.Mocker):
+    """Test that sensor in multi mode with no response returns correct properties."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        exc=requests.exceptions.ConnectionError,
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state is None
+    assert sensor.extra_state_attributes.get("predictions") is None
+    assert sensor.extra_state_attributes.get("attribution") is None
 
 
 def test_sensor_in_single_mode(
