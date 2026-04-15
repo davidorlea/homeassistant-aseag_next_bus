@@ -1,14 +1,14 @@
 """Tests for ASEAG Next Bus Sensor."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import json
 
+from homeassistant.components.sensor import SensorDeviceClass
 import pytest
 import requests
 import requests_mock
 
 from custom_components.aseag_next_bus.sensor import AseagApi, AseagNextBusSensor
-from homeassistant.components.sensor import SensorDeviceClass
 
 
 @pytest.mark.parametrize(
@@ -223,7 +223,7 @@ def test_sensor_in_single_mode(
     assert (
         sensor.state
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=3)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("delay") == 0
@@ -268,7 +268,7 @@ def test_sensor_in_multi_mode(
     assert (
         sensor.extra_state_attributes.get("predictions")[0].get("departure")
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=5)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("predictions")[0].get("delay") == 0
@@ -279,7 +279,7 @@ def test_sensor_in_multi_mode(
     assert (
         sensor.extra_state_attributes.get("predictions")[1].get("departure")
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=10)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("predictions")[1].get("delay") == 0
@@ -316,7 +316,7 @@ def test_sensor_in_single_mode_with_missing_actual_time(
     assert (
         sensor.state
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=3)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("delay") is None
@@ -361,7 +361,7 @@ def test_sensor_in_multi_mode_with_missing_actual_time(
     assert (
         sensor.extra_state_attributes.get("predictions")[0].get("departure")
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=5)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("predictions")[0].get("delay") is None
@@ -372,7 +372,7 @@ def test_sensor_in_multi_mode_with_missing_actual_time(
     assert (
         sensor.extra_state_attributes.get("predictions")[1].get("departure")
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=10)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("predictions")[1].get("delay") is None
@@ -418,7 +418,7 @@ def test_sensor_in_single_mode_with_cancellation(
     assert (
         sensor.state
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=10)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("delay") == 0
@@ -464,7 +464,7 @@ def test_sensor_in_multi_mode_with_cancellation(
     assert (
         sensor.extra_state_attributes.get("predictions")[0].get("departure")
         == (
-            datetime.now(tz=timezone.utc).replace(microsecond=0) + timedelta(minutes=10)
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
     assert sensor.extra_state_attributes.get("predictions")[0].get("delay") == 0

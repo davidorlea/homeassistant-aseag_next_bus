@@ -1,0 +1,26 @@
+[tool.ruff]
+required-version = ">=0.15.1"
+target-version = "py314"
+exclude = [".github"]
+
+[tool.ruff.lint]
+select = [
+    "B",   # flake8-bugbear
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line too long — handled by ruff-format
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["homeassistant"]
+combine-as-imports = true
+force-sort-within-sections = true
+
+[tool.codespell]
+ignore-words-list = 'hass'
+check-filenames = true
