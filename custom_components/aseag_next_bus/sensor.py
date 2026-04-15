@@ -1,6 +1,5 @@
 """Representation of ASEAG Next Bus Sensors."""
 
-import json
 import logging
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorDeviceClass
@@ -64,17 +63,22 @@ class AseagApi:
         headers = {"User-Agent": "curl/7.64.1"}
         resource = f"https://mova.aseag.de/mbroker/rest/areainformation/{stop_id}"
         try:
-            response = requests.get(resource, headers=headers, verify=True, timeout=10)
+            response = requests.get(
+                resource, headers=headers, verify=True, timeout=(5, 10)
+            )
             response.raise_for_status()
             return response.json()
-        except json.decoder.JSONDecodeError as ex:
+        except requests.exceptions.JSONDecodeError as ex:
             _LOGGER.error("Error parsing data: %s failed with %s", resource, ex)
             return None
         except requests.exceptions.HTTPError as ex:
             if ex.response.status_code >= 500:
-                _LOGGER.warning("Error fetching data: %s failed with %s", resource, ex)
+                _LOGGER.debug("Error fetching data: %s failed with %s", resource, ex)
             else:
                 _LOGGER.error("Error fetching data: %s failed with %s", resource, ex)
+            return None
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as ex:
+            _LOGGER.debug("Error fetching data: %s failed with %s", resource, ex)
             return None
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Error fetching data: %s failed with %s", resource, ex)
