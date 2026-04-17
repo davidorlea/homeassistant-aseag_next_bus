@@ -24,4 +24,4 @@ jobs:
       - name: Run pytest
         uses: davidorlea/actions/homeassistant/uv@master
         with:
-          uv-command: pytest
+          uv-command: pytest --cov
