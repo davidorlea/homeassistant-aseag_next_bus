@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 import json
+from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass
 import pytest
@@ -24,8 +25,8 @@ from custom_components.aseag_next_bus.sensor import AseagApi, AseagNextBusSensor
     ],
 )
 def test_sensor_in_single_mode_with_empty_response(
-    api_response, requests_mock: requests_mock.Mocker
-):
+    api_response: Any, requests_mock: requests_mock.Mocker
+) -> None:
     """Test that sensor in single mode with empty response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
@@ -39,10 +40,10 @@ def test_sensor_in_single_mode_with_empty_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("delay") is None
-    assert sensor.extra_state_attributes.get("line") is None
-    assert sensor.extra_state_attributes.get("destination") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "delay" not in sensor.extra_state_attributes
+    assert "line" not in sensor.extra_state_attributes
+    assert "destination" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
 @pytest.mark.parametrize(
@@ -57,10 +58,10 @@ def test_sensor_in_single_mode_with_empty_response(
         {"departures": {"departures": []}},
     ],
 )
-def test_sensor_in_multi_mode_with_empty_response(
-    api_response, requests_mock: requests_mock.Mocker
-):
-    """Test that sensor in multi mode with empty response returns correct properties."""
+def test_sensor_in_list_mode_with_empty_response(
+    api_response: Any, requests_mock: requests_mock.Mocker
+) -> None:
+    """Test that sensor in list mode with empty response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
         text=json.dumps(api_response),
@@ -73,13 +74,13 @@ def test_sensor_in_multi_mode_with_empty_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("predictions") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "predictions" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
 def test_sensor_in_single_mode_with_malformed_response(
     requests_mock: requests_mock.Mocker,
-):
+) -> None:
     """Test that sensor in single mode with malformed response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
@@ -93,16 +94,16 @@ def test_sensor_in_single_mode_with_malformed_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("delay") is None
-    assert sensor.extra_state_attributes.get("line") is None
-    assert sensor.extra_state_attributes.get("destination") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "delay" not in sensor.extra_state_attributes
+    assert "line" not in sensor.extra_state_attributes
+    assert "destination" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
-def test_sensor_in_multi_mode_with_malformed_response(
+def test_sensor_in_list_mode_with_malformed_response(
     requests_mock: requests_mock.Mocker,
-):
-    """Test that sensor in multi mode with malformed response returns correct properties."""
+) -> None:
+    """Test that sensor in list mode with malformed response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
         text="some text",
@@ -115,11 +116,13 @@ def test_sensor_in_multi_mode_with_malformed_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("predictions") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "predictions" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
-def test_sensor_in_single_mode_with_error_response(requests_mock: requests_mock.Mocker):
+def test_sensor_in_single_mode_with_error_response(
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test that sensor in single mode with error response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
@@ -134,14 +137,16 @@ def test_sensor_in_single_mode_with_error_response(requests_mock: requests_mock.
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("delay") is None
-    assert sensor.extra_state_attributes.get("line") is None
-    assert sensor.extra_state_attributes.get("destination") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "delay" not in sensor.extra_state_attributes
+    assert "line" not in sensor.extra_state_attributes
+    assert "destination" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
-def test_sensor_in_multi_mode_with_error_response(requests_mock: requests_mock.Mocker):
-    """Test that sensor in multi mode with error response returns correct properties."""
+def test_sensor_in_list_mode_with_error_response(
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with error response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
         status_code=500,
@@ -155,11 +160,13 @@ def test_sensor_in_multi_mode_with_error_response(requests_mock: requests_mock.M
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("predictions") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "predictions" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
-def test_sensor_in_single_mode_with_no_response(requests_mock: requests_mock.Mocker):
+def test_sensor_in_single_mode_with_no_response(
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test that sensor in single mode with no response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
@@ -173,14 +180,16 @@ def test_sensor_in_single_mode_with_no_response(requests_mock: requests_mock.Moc
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("delay") is None
-    assert sensor.extra_state_attributes.get("line") is None
-    assert sensor.extra_state_attributes.get("destination") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "delay" not in sensor.extra_state_attributes
+    assert "line" not in sensor.extra_state_attributes
+    assert "destination" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
-def test_sensor_in_multi_mode_with_no_response(requests_mock: requests_mock.Mocker):
-    """Test that sensor in multi mode with no response returns correct properties."""
+def test_sensor_in_list_mode_with_no_response(
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with no response returns correct properties."""
     requests_mock.get(
         "https://mova.aseag.de/mbroker/rest/areainformation/12345",
         exc=requests.exceptions.ConnectionError,
@@ -193,13 +202,15 @@ def test_sensor_in_multi_mode_with_no_response(requests_mock: requests_mock.Mock
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert sensor.extra_state_attributes.get("predictions") is None
-    assert sensor.extra_state_attributes.get("attribution") is None
+    assert "predictions" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
 
 
 def test_sensor_in_single_mode(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test that sensor in single mode returns correct properties."""
     prediction = (
         create_prediction()
@@ -226,16 +237,18 @@ def test_sensor_in_single_mode(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("delay") == 0
-    assert sensor.extra_state_attributes.get("line") == "1"
-    assert sensor.extra_state_attributes.get("destination") == "One"
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
-def test_sensor_in_multi_mode(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
-    """Test that sensor in multi mode returns correct properties."""
+def test_sensor_in_list_mode(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode returns correct properties."""
     prediction_one = (
         create_prediction()
         .with_line_name("1")
@@ -264,35 +277,33 @@ def test_sensor_in_multi_mode(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 2
-    assert len(sensor.extra_state_attributes.get("predictions")) == 2
+    assert len(sensor.extra_state_attributes["predictions"]) == 2
     assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("departure")
+        sensor.extra_state_attributes["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("predictions")[0].get("delay") == 0
-    assert sensor.extra_state_attributes.get("predictions")[0].get("line") == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
     assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("destination") == "One"
-    )
-    assert (
-        sensor.extra_state_attributes.get("predictions")[1].get("departure")
+        sensor.extra_state_attributes["predictions"][1]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("predictions")[1].get("delay") == 0
-    assert sensor.extra_state_attributes.get("predictions")[1].get("line") == "2"
-    assert (
-        sensor.extra_state_attributes.get("predictions")[1].get("destination") == "Two"
-    )
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["predictions"][1]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
+    assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_missing_actual_time(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test that sensor in single mode with missing actual time returns correct properties."""
     prediction = (
         create_prediction()
@@ -319,16 +330,18 @@ def test_sensor_in_single_mode_with_missing_actual_time(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("delay") is None
-    assert sensor.extra_state_attributes.get("line") == "1"
-    assert sensor.extra_state_attributes.get("destination") == "One"
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
-def test_sensor_in_multi_mode_with_missing_actual_time(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
-    """Test that sensor in multi mode with missing actual time returns correct properties."""
+def test_sensor_in_list_mode_with_missing_actual_time(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with missing actual time returns correct properties."""
     prediction_one = (
         create_prediction()
         .with_line_name("1")
@@ -357,35 +370,33 @@ def test_sensor_in_multi_mode_with_missing_actual_time(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 2
-    assert len(sensor.extra_state_attributes.get("predictions")) == 2
+    assert len(sensor.extra_state_attributes["predictions"]) == 2
     assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("departure")
+        sensor.extra_state_attributes["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("predictions")[0].get("delay") is None
-    assert sensor.extra_state_attributes.get("predictions")[0].get("line") == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
     assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("destination") == "One"
-    )
-    assert (
-        sensor.extra_state_attributes.get("predictions")[1].get("departure")
+        sensor.extra_state_attributes["predictions"][1]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("predictions")[1].get("delay") is None
-    assert sensor.extra_state_attributes.get("predictions")[1].get("line") == "2"
-    assert (
-        sensor.extra_state_attributes.get("predictions")[1].get("destination") == "Two"
-    )
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["predictions"][1]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
+    assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_cancellation(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test that sensor in single mode with cancellation returns correct properties."""
     prediction_one = (
         create_prediction()
@@ -421,16 +432,18 @@ def test_sensor_in_single_mode_with_cancellation(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("delay") == 0
-    assert sensor.extra_state_attributes.get("line") == "2"
-    assert sensor.extra_state_attributes.get("destination") == "Two"
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "2"
+    assert sensor.extra_state_attributes["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
-def test_sensor_in_multi_mode_with_cancellation(
-    create_prediction, create_api_response, requests_mock: requests_mock.Mocker
-):
-    """Test that sensor in multi mode with cancellation returns correct properties."""
+def test_sensor_in_list_mode_with_cancellation(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with cancellation returns correct properties."""
     prediction_one = (
         create_prediction()
         .with_line_name("1")
@@ -460,16 +473,14 @@ def test_sensor_in_multi_mode_with_cancellation(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes.get("predictions")) == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("departure")
+        sensor.extra_state_attributes["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes.get("predictions")[0].get("delay") == 0
-    assert sensor.extra_state_attributes.get("predictions")[0].get("line") == "2"
-    assert (
-        sensor.extra_state_attributes.get("predictions")[0].get("destination") == "Two"
-    )
-    assert sensor.extra_state_attributes.get("attribution") == "Data provided by ASEAG"
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"

@@ -1,3 +1,22 @@
+[project]
+name = "homeassistant-aseag_next_bus"
+version = "0.8.0"
+description = "Custom Home Assistant component to retrieve next bus information from the ASEAG"
+requires-python = ">=3.14.2,<4.0"
+dependencies = [
+    "homeassistant>=2026.4.2",
+    "requests>=2.33.1",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.1",
+    "pytest>=9.0.3",
+    "requests-mock>=1.12.1",
+]
+
 [tool.ruff]
 required-version = ">=0.15.1"
 target-version = "py314"
@@ -24,3 +43,31 @@ force-sort-within-sections = true
 [tool.codespell]
 ignore-words-list = 'hass'
 check-filenames = true
+
+[tool.mypy]
+python_version = "3.14"
+show_error_codes = true
+follow_imports = "normal"
+strict = true
+strict_equality = true
+local_partial_types = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+warn_incomplete_stub = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+enable_error_code = ["deprecated", "ignore-without-code", "redundant-self", "truthy-iterable"]
+disable_error_code = ["import-untyped"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:homeassistant",
+]

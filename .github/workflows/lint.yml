@@ -23,3 +23,15 @@ jobs:
         uses: davidorlea/actions/homeassistant/prek@master
         with:
           python-version: '3.14'
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - name: Run mypy
+        uses: davidorlea/actions/homeassistant/uv@master
+        with:
+          uv-command: mypy custom_components tests
