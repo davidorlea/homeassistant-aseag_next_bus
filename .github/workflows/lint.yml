@@ -21,8 +21,6 @@ jobs:
           submodules: recursive
       - name: Run prek
         uses: davidorlea/actions/homeassistant/prek@master
-        with:
-          python-version: '3.14'
 
   mypy:
     runs-on: ubuntu-latest
