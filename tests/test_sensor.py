@@ -43,6 +43,7 @@ def test_sensor_in_single_mode_with_empty_response(
     assert "delay" not in sensor.extra_state_attributes
     assert "line" not in sensor.extra_state_attributes
     assert "destination" not in sensor.extra_state_attributes
+    assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
 
 
@@ -97,6 +98,7 @@ def test_sensor_in_single_mode_with_malformed_response(
     assert "delay" not in sensor.extra_state_attributes
     assert "line" not in sensor.extra_state_attributes
     assert "destination" not in sensor.extra_state_attributes
+    assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
 
 
@@ -140,6 +142,7 @@ def test_sensor_in_single_mode_with_error_response(
     assert "delay" not in sensor.extra_state_attributes
     assert "line" not in sensor.extra_state_attributes
     assert "destination" not in sensor.extra_state_attributes
+    assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
 
 
@@ -183,6 +186,7 @@ def test_sensor_in_single_mode_with_no_response(
     assert "delay" not in sensor.extra_state_attributes
     assert "line" not in sensor.extra_state_attributes
     assert "destination" not in sensor.extra_state_attributes
+    assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
 
 
@@ -240,6 +244,7 @@ def test_sensor_in_single_mode(
     assert sensor.extra_state_attributes["delay"] == 0
     assert sensor.extra_state_attributes["line"] == "1"
     assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -287,6 +292,7 @@ def test_sensor_in_list_mode(
     assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
     assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
     assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
     assert (
         sensor.extra_state_attributes["predictions"][1]["departure"]
         == (
@@ -296,6 +302,7 @@ def test_sensor_in_list_mode(
     assert sensor.extra_state_attributes["predictions"][1]["delay"] == 0
     assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
     assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
+    assert sensor.extra_state_attributes["predictions"][1]["tracking"] == "live"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -333,6 +340,7 @@ def test_sensor_in_single_mode_with_missing_actual_time(
     assert sensor.extra_state_attributes["delay"] is None
     assert sensor.extra_state_attributes["line"] == "1"
     assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -380,6 +388,7 @@ def test_sensor_in_list_mode_with_missing_actual_time(
     assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
     assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
     assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
     assert (
         sensor.extra_state_attributes["predictions"][1]["departure"]
         == (
@@ -389,6 +398,7 @@ def test_sensor_in_list_mode_with_missing_actual_time(
     assert sensor.extra_state_attributes["predictions"][1]["delay"] is None
     assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
     assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
+    assert sensor.extra_state_attributes["predictions"][1]["tracking"] == "scheduled"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -435,6 +445,7 @@ def test_sensor_in_single_mode_with_cancellation(
     assert sensor.extra_state_attributes["delay"] == 0
     assert sensor.extra_state_attributes["line"] == "2"
     assert sensor.extra_state_attributes["destination"] == "Two"
+    assert sensor.extra_state_attributes["tracking"] == "live"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -483,6 +494,1267 @@ def test_sensor_in_list_mode_with_cancellation(
     assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
     assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
     assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_scheduled_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from scheduled to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_scheduled_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from scheduled to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_live_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from live to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_live_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from live to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_live_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from live to live returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_live_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from live to live returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_live_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from live to scheduled returns correct properties."""
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_scheduled["stopPrediction"]["tripId"] = prediction_live[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_live])},
+            {"text": create_api_response([prediction_scheduled])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_live_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from live to scheduled returns correct properties."""
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_scheduled["stopPrediction"]["tripId"] = prediction_live[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_live])},
+            {"text": create_api_response([prediction_scheduled])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_scheduled_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from scheduled to live returns correct properties."""
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_live["stopPrediction"]["tripId"] = prediction_scheduled[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_scheduled])},
+            {"text": create_api_response([prediction_live])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"  # type: ignore[unreachable]
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_scheduled_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from scheduled to live returns correct properties."""
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_live["stopPrediction"]["tripId"] = prediction_scheduled[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_scheduled])},
+            {"text": create_api_response([prediction_live])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"  # type: ignore[unreachable]
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_scheduled_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from scheduled to scheduled returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_scheduled_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from scheduled to scheduled returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_cached_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from cached to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_cached_to_cached(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from cached to cached returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_cached_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from cached to live returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_cached_to_live(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from cached to live returns correct properties."""
+    prediction = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([prediction])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_tracking_cached_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with tracking from cached to scheduled returns correct properties."""
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_scheduled["stopPrediction"]["tripId"] = prediction_live[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_live])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([prediction_scheduled])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] is None
+    assert sensor.extra_state_attributes["line"] == "1"
+    assert sensor.extra_state_attributes["destination"] == "One"
+    assert sensor.extra_state_attributes["tracking"] == "scheduled"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_tracking_cached_to_scheduled(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with tracking from cached to scheduled returns correct properties."""
+    prediction_live = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    prediction_scheduled = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(10)
+        .without_actual_time()
+        .build()
+    )
+    prediction_scheduled["stopPrediction"]["tripId"] = prediction_live[
+        "stopPrediction"
+    ]["tripId"]
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        [
+            {"text": create_api_response([prediction_live])},
+            {"text": create_api_response([])},
+            {"text": create_api_response([prediction_scheduled])},
+        ],
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -529,6 +1801,7 @@ def test_sensor_in_single_mode_with_stop_cancellation(
     assert sensor.extra_state_attributes["delay"] == 0
     assert sensor.extra_state_attributes["line"] == "2"
     assert sensor.extra_state_attributes["destination"] == "Two"
+    assert sensor.extra_state_attributes["tracking"] == "live"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
 
 
@@ -577,4 +1850,5 @@ def test_sensor_in_list_mode_with_stop_cancellation(
     assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
     assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
     assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
+    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
     assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
