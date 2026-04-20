@@ -22,6 +22,7 @@ class AseagPredictionFixture:
         self._actual_time: int | None = self.__get_time_from_delta(10)
         self._track: str = "H.1"
         self._cancelled: bool = False
+        self._stop_cancelled: bool = False
 
     def with_line_name(self, line_name: str) -> Self:
         """Set an individual line name."""
@@ -48,9 +49,14 @@ class AseagPredictionFixture:
         self._track = track
         return self
 
-    def is_cancelled(self, cancelled: bool) -> Self:
+    def with_cancelled(self, cancelled: bool) -> Self:
         """Mark the prediction as cancelled."""
         self._cancelled = cancelled
+        return self
+
+    def with_stop_cancelled(self, stop_cancelled: bool) -> Self:
+        """Mark the stop as cancelled."""
+        self._stop_cancelled = stop_cancelled
         return self
 
     def without_planed_time(self) -> Self:
@@ -74,6 +80,7 @@ class AseagPredictionFixture:
                 "actualTime": self._actual_time,
                 "track": self._track,
                 "cancelled": self._cancelled,
+                "stopCancelled": self._stop_cancelled,
             }
         }
 

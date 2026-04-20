@@ -404,7 +404,7 @@ def test_sensor_in_single_mode_with_cancellation(
         .with_destination_text("One")
         .with_planned_time_delta(5)
         .with_actual_time_delta(5)
-        .is_cancelled(True)
+        .with_cancelled(True)
         .build()
     )
     prediction_two = (
@@ -450,7 +450,101 @@ def test_sensor_in_list_mode_with_cancellation(
         .with_destination_text("One")
         .with_planned_time_delta(5)
         .with_actual_time_delta(5)
-        .is_cancelled(True)
+        .with_cancelled(True)
+        .build()
+    )
+    prediction_two = (
+        create_prediction()
+        .with_line_name("2")
+        .with_destination_text("Two")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=create_api_response([prediction_one, prediction_two]),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state == 1
+    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert (
+        sensor.extra_state_attributes["predictions"][0]["departure"]
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
+    assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
+    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_single_mode_with_stop_cancellation(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in single mode with stop cancellation returns correct properties."""
+    prediction_one = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(5)
+        .with_actual_time_delta(5)
+        .with_stop_cancelled(True)
+        .build()
+    )
+    prediction_two = (
+        create_prediction()
+        .with_line_name("2")
+        .with_destination_text("Two")
+        .with_planned_time_delta(10)
+        .with_actual_time_delta(10)
+        .build()
+    )
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=create_api_response([prediction_one, prediction_two]),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert (
+        sensor.state
+        == (
+            datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
+        ).isoformat()
+    )
+    assert sensor.extra_state_attributes["delay"] == 0
+    assert sensor.extra_state_attributes["line"] == "2"
+    assert sensor.extra_state_attributes["destination"] == "Two"
+    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+
+
+def test_sensor_in_list_mode_with_stop_cancellation(
+    create_prediction: Any,
+    create_api_response: Any,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test that sensor in list mode with stop cancellation returns correct properties."""
+    prediction_one = (
+        create_prediction()
+        .with_line_name("1")
+        .with_destination_text("One")
+        .with_planned_time_delta(5)
+        .with_actual_time_delta(5)
+        .with_stop_cancelled(True)
         .build()
     )
     prediction_two = (

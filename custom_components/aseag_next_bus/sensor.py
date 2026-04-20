@@ -165,6 +165,7 @@ class AseagNextBusSensor(Entity):
 
         predictions = [p for p in predictions if p["track"] == self._track]
         predictions = [p for p in predictions if p["cancelled"] is False]
+        predictions = [p for p in predictions if p["stopCancelled"] is False]
         predictions = [p for p in predictions if self.__get_prediction_time(p) >= now]
 
         self._predictions = sorted(
