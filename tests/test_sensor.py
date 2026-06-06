@@ -25,7 +25,7 @@ from custom_components.aseag_next_bus.sensor import AseagApi, AseagNextBusSensor
     ],
 )
 def test_sensor_in_single_mode_with_empty_response(
-    api_response: Any, requests_mock: requests_mock.Mocker
+    api_response: Any, requests_mock: requests_mock.Mocker, caplog: Any
 ) -> None:
     """Test that sensor in single mode with empty response returns correct properties."""
     requests_mock.get(
@@ -45,6 +45,8 @@ def test_sensor_in_single_mode_with_empty_response(
     assert "destination" not in sensor.extra_state_attributes
     assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" not in caplog.text
+    assert "Erroneous result found" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -60,7 +62,7 @@ def test_sensor_in_single_mode_with_empty_response(
     ],
 )
 def test_sensor_in_list_mode_with_empty_response(
-    api_response: Any, requests_mock: requests_mock.Mocker
+    api_response: Any, requests_mock: requests_mock.Mocker, caplog: Any
 ) -> None:
     """Test that sensor in list mode with empty response returns correct properties."""
     requests_mock.get(
@@ -77,10 +79,12 @@ def test_sensor_in_list_mode_with_empty_response(
     assert sensor.state is None
     assert "predictions" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" not in caplog.text
+    assert "Erroneous result found" not in caplog.text
 
 
 def test_sensor_in_single_mode_with_malformed_response(
-    requests_mock: requests_mock.Mocker,
+    requests_mock: requests_mock.Mocker, caplog: Any
 ) -> None:
     """Test that sensor in single mode with malformed response returns correct properties."""
     requests_mock.get(
@@ -100,10 +104,12 @@ def test_sensor_in_single_mode_with_malformed_response(
     assert "destination" not in sensor.extra_state_attributes
     assert "tracking" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" in caplog.text
+    assert "Erroneous result found" not in caplog.text
 
 
 def test_sensor_in_list_mode_with_malformed_response(
-    requests_mock: requests_mock.Mocker,
+    requests_mock: requests_mock.Mocker, caplog: Any
 ) -> None:
     """Test that sensor in list mode with malformed response returns correct properties."""
     requests_mock.get(
@@ -120,6 +126,71 @@ def test_sensor_in_list_mode_with_malformed_response(
     assert sensor.state is None
     assert "predictions" not in sensor.extra_state_attributes
     assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" in caplog.text
+    assert "Erroneous result found" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "api_response",
+    [
+        {"departures": "some text"},
+        {"departures": {"departures": [{}]}},
+        {"departures": {"departures": 123}},
+    ],
+)
+def test_sensor_in_single_mode_with_malformed_departures(
+    api_response: Any, requests_mock: requests_mock.Mocker, caplog: Any
+) -> None:
+    """Test that sensor in single mode handles malformed departures."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=json.dumps(api_response),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "single", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.state is None
+    assert "delay" not in sensor.extra_state_attributes
+    assert "line" not in sensor.extra_state_attributes
+    assert "destination" not in sensor.extra_state_attributes
+    assert "tracking" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" not in caplog.text
+    assert "Erroneous result found" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "api_response",
+    [
+        {"departures": "some text"},
+        {"departures": {"departures": [{}]}},
+        {"departures": {"departures": 123}},
+    ],
+)
+def test_sensor_in_list_mode_with_malformed_departures(
+    api_response: Any, requests_mock: requests_mock.Mocker, caplog: Any
+) -> None:
+    """Test that sensor in list mode handles malformed departures."""
+    requests_mock.get(
+        "https://mova.aseag.de/mbroker/rest/areainformation/12345",
+        text=json.dumps(api_response),
+    )
+    sensor = AseagNextBusSensor(AseagApi(), "Sensor", "list", "12345", "H.1")
+
+    sensor.update()
+
+    assert sensor.name == "Sensor 12345 H.1"
+    assert sensor.icon == "mdi:bus"
+    assert sensor.device_class is None
+    assert sensor.state is None
+    assert "predictions" not in sensor.extra_state_attributes
+    assert "attribution" not in sensor.extra_state_attributes
+    assert "Error parsing data" not in caplog.text
+    assert "Erroneous result found" in caplog.text
 
 
 def test_sensor_in_single_mode_with_error_response(
