@@ -1,5 +1,6 @@
 """Tests for ASEAG Next Bus Sensor."""
 
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import json
 from typing import Any
@@ -10,6 +11,12 @@ import requests
 import requests_mock
 
 from custom_components.aseag_next_bus.sensor import AseagApi, AseagNextBusSensor
+
+
+def extra_state_attributes(sensor: AseagNextBusSensor) -> Mapping[str, Any]:
+    """Return sensor attributes with a non-optional type for assertions."""
+    assert sensor.extra_state_attributes is not None
+    return sensor.extra_state_attributes
 
 
 @pytest.mark.parametrize(
@@ -40,11 +47,11 @@ def test_sensor_in_single_mode_with_empty_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert "delay" not in sensor.extra_state_attributes
-    assert "line" not in sensor.extra_state_attributes
-    assert "destination" not in sensor.extra_state_attributes
-    assert "tracking" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "delay" not in extra_state_attributes(sensor)
+    assert "line" not in extra_state_attributes(sensor)
+    assert "destination" not in extra_state_attributes(sensor)
+    assert "tracking" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" not in caplog.text
     assert "Erroneous result found" not in caplog.text
 
@@ -77,8 +84,8 @@ def test_sensor_in_list_mode_with_empty_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert "predictions" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "predictions" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" not in caplog.text
     assert "Erroneous result found" not in caplog.text
 
@@ -99,11 +106,11 @@ def test_sensor_in_single_mode_with_malformed_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert "delay" not in sensor.extra_state_attributes
-    assert "line" not in sensor.extra_state_attributes
-    assert "destination" not in sensor.extra_state_attributes
-    assert "tracking" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "delay" not in extra_state_attributes(sensor)
+    assert "line" not in extra_state_attributes(sensor)
+    assert "destination" not in extra_state_attributes(sensor)
+    assert "tracking" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" in caplog.text
     assert "Erroneous result found" not in caplog.text
 
@@ -124,8 +131,8 @@ def test_sensor_in_list_mode_with_malformed_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert "predictions" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "predictions" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" in caplog.text
     assert "Erroneous result found" not in caplog.text
 
@@ -154,11 +161,11 @@ def test_sensor_in_single_mode_with_malformed_departures(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert "delay" not in sensor.extra_state_attributes
-    assert "line" not in sensor.extra_state_attributes
-    assert "destination" not in sensor.extra_state_attributes
-    assert "tracking" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "delay" not in extra_state_attributes(sensor)
+    assert "line" not in extra_state_attributes(sensor)
+    assert "destination" not in extra_state_attributes(sensor)
+    assert "tracking" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" not in caplog.text
     assert "Erroneous result found" in caplog.text
 
@@ -187,8 +194,8 @@ def test_sensor_in_list_mode_with_malformed_departures(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert "predictions" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "predictions" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
     assert "Error parsing data" not in caplog.text
     assert "Erroneous result found" in caplog.text
 
@@ -210,11 +217,11 @@ def test_sensor_in_single_mode_with_error_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert "delay" not in sensor.extra_state_attributes
-    assert "line" not in sensor.extra_state_attributes
-    assert "destination" not in sensor.extra_state_attributes
-    assert "tracking" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "delay" not in extra_state_attributes(sensor)
+    assert "line" not in extra_state_attributes(sensor)
+    assert "destination" not in extra_state_attributes(sensor)
+    assert "tracking" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_error_response(
@@ -234,8 +241,8 @@ def test_sensor_in_list_mode_with_error_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert "predictions" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "predictions" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_no_response(
@@ -254,11 +261,11 @@ def test_sensor_in_single_mode_with_no_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class == SensorDeviceClass.TIMESTAMP
     assert sensor.state is None
-    assert "delay" not in sensor.extra_state_attributes
-    assert "line" not in sensor.extra_state_attributes
-    assert "destination" not in sensor.extra_state_attributes
-    assert "tracking" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "delay" not in extra_state_attributes(sensor)
+    assert "line" not in extra_state_attributes(sensor)
+    assert "destination" not in extra_state_attributes(sensor)
+    assert "tracking" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_no_response(
@@ -277,8 +284,8 @@ def test_sensor_in_list_mode_with_no_response(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state is None
-    assert "predictions" not in sensor.extra_state_attributes
-    assert "attribution" not in sensor.extra_state_attributes
+    assert "predictions" not in extra_state_attributes(sensor)
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode(
@@ -312,11 +319,11 @@ def test_sensor_in_single_mode(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode(
@@ -353,28 +360,28 @@ def test_sensor_in_list_mode(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 2
-    assert len(sensor.extra_state_attributes["predictions"]) == 2
+    assert len(extra_state_attributes(sensor)["predictions"]) == 2
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
     assert (
-        sensor.extra_state_attributes["predictions"][1]["departure"]
+        extra_state_attributes(sensor)["predictions"][1]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][1]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
-    assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
-    assert sensor.extra_state_attributes["predictions"][1]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][1]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][1]["line"] == "2"
+    assert extra_state_attributes(sensor)["predictions"][1]["destination"] == "Two"
+    assert extra_state_attributes(sensor)["predictions"][1]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_missing_actual_time(
@@ -408,11 +415,11 @@ def test_sensor_in_single_mode_with_missing_actual_time(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=3)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_missing_actual_time(
@@ -449,28 +456,28 @@ def test_sensor_in_list_mode_with_missing_actual_time(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 2
-    assert len(sensor.extra_state_attributes["predictions"]) == 2
+    assert len(extra_state_attributes(sensor)["predictions"]) == 2
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=5)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
     assert (
-        sensor.extra_state_attributes["predictions"][1]["departure"]
+        extra_state_attributes(sensor)["predictions"][1]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][1]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][1]["line"] == "2"
-    assert sensor.extra_state_attributes["predictions"][1]["destination"] == "Two"
-    assert sensor.extra_state_attributes["predictions"][1]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][1]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][1]["line"] == "2"
+    assert extra_state_attributes(sensor)["predictions"][1]["destination"] == "Two"
+    assert extra_state_attributes(sensor)["predictions"][1]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_cancellation(
@@ -513,11 +520,11 @@ def test_sensor_in_single_mode_with_cancellation(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "2"
-    assert sensor.extra_state_attributes["destination"] == "Two"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "2"
+    assert extra_state_attributes(sensor)["destination"] == "Two"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_cancellation(
@@ -555,18 +562,18 @@ def test_sensor_in_list_mode_with_cancellation(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "2"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "Two"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_scheduled_to_cached(
@@ -603,11 +610,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -620,11 +627,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_scheduled_to_cached(
@@ -656,18 +663,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -675,18 +682,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_live_to_cached(
@@ -723,11 +730,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -740,11 +747,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_live_to_cached(
@@ -776,18 +783,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -795,18 +802,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_live_to_live(
@@ -843,11 +850,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -860,11 +867,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_live_to_live(
@@ -896,18 +903,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -915,18 +922,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_live_to_scheduled(
@@ -974,11 +981,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -991,11 +998,11 @@ def test_sensor_in_single_mode_with_tracking_live_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_live_to_scheduled(
@@ -1038,18 +1045,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1057,18 +1064,18 @@ def test_sensor_in_list_mode_with_tracking_live_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_scheduled_to_live(
@@ -1116,11 +1123,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1133,11 +1140,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"  # type: ignore[unreachable]
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_scheduled_to_live(
@@ -1180,18 +1187,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1199,18 +1206,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"  # type: ignore[unreachable]
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_scheduled_to_scheduled(
@@ -1247,11 +1254,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1264,11 +1271,11 @@ def test_sensor_in_single_mode_with_tracking_scheduled_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_scheduled_to_scheduled(
@@ -1300,18 +1307,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1319,18 +1326,18 @@ def test_sensor_in_list_mode_with_tracking_scheduled_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_cached_to_cached(
@@ -1368,11 +1375,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1385,11 +1392,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1402,11 +1409,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_cached(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_cached_to_cached(
@@ -1439,18 +1446,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1458,18 +1465,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1477,18 +1484,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_cached(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_cached_to_live(
@@ -1526,11 +1533,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1543,11 +1550,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1560,11 +1567,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_live(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_cached_to_live(
@@ -1597,18 +1604,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1616,18 +1623,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1635,18 +1642,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_live(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_tracking_cached_to_scheduled(
@@ -1695,11 +1702,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1712,11 +1719,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1729,11 +1736,11 @@ def test_sensor_in_single_mode_with_tracking_cached_to_scheduled(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] is None
-    assert sensor.extra_state_attributes["line"] == "1"
-    assert sensor.extra_state_attributes["destination"] == "One"
-    assert sensor.extra_state_attributes["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] is None
+    assert extra_state_attributes(sensor)["line"] == "1"
+    assert extra_state_attributes(sensor)["destination"] == "One"
+    assert extra_state_attributes(sensor)["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_tracking_cached_to_scheduled(
@@ -1777,18 +1784,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1796,18 +1803,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "cached"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "cached"
+    assert sensor.attribution == "Data provided by ASEAG"
 
     sensor.update()
 
@@ -1815,18 +1822,18 @@ def test_sensor_in_list_mode_with_tracking_cached_to_scheduled(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] is None
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "1"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "One"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "scheduled"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] is None
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "1"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "One"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "scheduled"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_single_mode_with_stop_cancellation(
@@ -1869,11 +1876,11 @@ def test_sensor_in_single_mode_with_stop_cancellation(
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["delay"] == 0
-    assert sensor.extra_state_attributes["line"] == "2"
-    assert sensor.extra_state_attributes["destination"] == "Two"
-    assert sensor.extra_state_attributes["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["delay"] == 0
+    assert extra_state_attributes(sensor)["line"] == "2"
+    assert extra_state_attributes(sensor)["destination"] == "Two"
+    assert extra_state_attributes(sensor)["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"
 
 
 def test_sensor_in_list_mode_with_stop_cancellation(
@@ -1911,15 +1918,15 @@ def test_sensor_in_list_mode_with_stop_cancellation(
     assert sensor.icon == "mdi:bus"
     assert sensor.device_class is None
     assert sensor.state == 1
-    assert len(sensor.extra_state_attributes["predictions"]) == 1
+    assert len(extra_state_attributes(sensor)["predictions"]) == 1
     assert (
-        sensor.extra_state_attributes["predictions"][0]["departure"]
+        extra_state_attributes(sensor)["predictions"][0]["departure"]
         == (
             datetime.now(tz=UTC).replace(microsecond=0) + timedelta(minutes=10)
         ).isoformat()
     )
-    assert sensor.extra_state_attributes["predictions"][0]["delay"] == 0
-    assert sensor.extra_state_attributes["predictions"][0]["line"] == "2"
-    assert sensor.extra_state_attributes["predictions"][0]["destination"] == "Two"
-    assert sensor.extra_state_attributes["predictions"][0]["tracking"] == "live"
-    assert sensor.extra_state_attributes["attribution"] == "Data provided by ASEAG"
+    assert extra_state_attributes(sensor)["predictions"][0]["delay"] == 0
+    assert extra_state_attributes(sensor)["predictions"][0]["line"] == "2"
+    assert extra_state_attributes(sensor)["predictions"][0]["destination"] == "Two"
+    assert extra_state_attributes(sensor)["predictions"][0]["tracking"] == "live"
+    assert sensor.attribution == "Data provided by ASEAG"

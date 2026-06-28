@@ -4,11 +4,14 @@ from datetime import datetime
 import logging
 from typing import Any, cast
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorDeviceClass
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -97,53 +100,32 @@ class AseagApi:
             return None
 
 
-class AseagNextBusSensor(Entity):
+class AseagNextBusSensor(SensorEntity):
     """Representation of a ASEAG Next Bus Sensor."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_icon = ICON
 
     def __init__(
         self, api: AseagApi, name: str, mode: str, stop_id: str, track: str
     ) -> None:
         """Initialize the ASEAG Next Bus Sensor."""
         self._api: AseagApi = api
-        self._name: str = name
         self._mode: str = mode
         self._stop_id: str = stop_id
         self._track: str = track
         self._predictions: list[dict[str, Any]] = []
-        self._state: str | int | None = None
-        self._attributes: dict[str, Any] = {}
-
-    @property
-    def name(self) -> str:
-        """Return the name of the ASEAG Next Bus Sensor."""
-        return f"{self._name} {self._stop_id} {self._track}"
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of the ASEAG Next Bus Sensor."""
-        if self._mode == "single":
-            return SensorDeviceClass.TIMESTAMP
-        return None
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend of the ASEAG Next Bus Sensor."""
-        return ICON
-
-    @property
-    def state(self) -> str | int | None:
-        """Return the state of the ASEAG Next Bus Sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the ASEAG Next Bus Sensor."""
-        return self._attributes
+        self._attr_name = f"{name} {stop_id} {track}"
+        self._attr_device_class = (
+            SensorDeviceClass.TIMESTAMP if self._mode == "single" else None
+        )
+        self._attr_native_value: datetime | int | None = None
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     def update(self) -> None:
         """Fetch new state data for the ASEAG Next Bus Sensor."""
-        self._state = None
-        self._attributes = {}
+        self._attr_native_value = None
+        self._attr_extra_state_attributes = {}
 
         now: datetime = utcnow()
         result: dict[str, Any] | None = self._api.get_predictions(self._stop_id)
@@ -177,8 +159,8 @@ class AseagNextBusSensor(Entity):
         )
 
         if self._predictions and self._mode == "list":
-            self._state = len(self._predictions)
-            self._attributes[ATTR_PREDICTIONS] = [
+            self._attr_native_value = len(self._predictions)
+            self._attr_extra_state_attributes[ATTR_PREDICTIONS] = [
                 {
                     ATTR_DEPARTURE: self.__get_prediction_time(p).isoformat(),
                     ATTR_DELAY: self.__get_prediction_delay(p),
@@ -188,19 +170,21 @@ class AseagNextBusSensor(Entity):
                 }
                 for p in self._predictions
             ]
-            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self._predictions and self._mode == "single":
-            self._state = self.__get_prediction_time(self._predictions[0]).isoformat()
-            self._attributes[ATTR_DELAY] = self.__get_prediction_delay(
+            self._attr_native_value = self.__get_prediction_time(self._predictions[0])
+            self._attr_extra_state_attributes[ATTR_DELAY] = self.__get_prediction_delay(
                 self._predictions[0]
             )
-            self._attributes[ATTR_LINE] = self._predictions[0]["lineName"]
-            self._attributes[ATTR_DESTINATION] = self._predictions[0]["destinationText"]
-            self._attributes[ATTR_TRACKING] = self.__get_prediction_tracking(
-                self._predictions[0]
+            self._attr_extra_state_attributes[ATTR_LINE] = self._predictions[0][
+                "lineName"
+            ]
+            self._attr_extra_state_attributes[ATTR_DESTINATION] = self._predictions[0][
+                "destinationText"
+            ]
+            self._attr_extra_state_attributes[ATTR_TRACKING] = (
+                self.__get_prediction_tracking(self._predictions[0])
             )
-            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
 
     @staticmethod
     def __get_prediction_tracking(prediction: dict[str, Any]) -> str:
