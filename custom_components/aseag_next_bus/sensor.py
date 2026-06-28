@@ -83,7 +83,8 @@ class AseagApi:
             _LOGGER.error("Error parsing data: %s failed with %s", resource, ex)
             return None
         except requests.exceptions.HTTPError as ex:
-            if ex.response.status_code >= 500:
+            error_response = ex.response
+            if error_response is not None and error_response.status_code >= 500:
                 _LOGGER.debug("Error fetching data: %s failed with %s", resource, ex)
             else:
                 _LOGGER.error("Error fetching data: %s failed with %s", resource, ex)
